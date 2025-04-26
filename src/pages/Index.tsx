@@ -1,12 +1,18 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React from "react";
+import usePhotoStore from "@/lib/store";
+import AlbumGrid from "@/components/AlbumGrid";
+import Header from "@/components/Header";
 
 const Index = () => {
+  const albums = usePhotoStore((state) => state.albums);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 color-black text-black">Добро пожаловать!</h1>
-        <p className="text-xl text-gray-600">тут будет отображаться ваш проект</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Header title="Мои альбомы" />
+      
+      <main className="flex-1">
+        <AlbumGrid albums={albums} />
+      </main>
     </div>
   );
 };
