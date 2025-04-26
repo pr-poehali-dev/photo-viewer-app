@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Album, Photo, ViewMode } from "@/types/types";
 
 interface PhotoStore {
@@ -162,9 +163,9 @@ const store = new SimpleStore();
 
 // Хук для использования хранилища в компонентах React
 export function usePhotoStore() {
-  const [state, setState] = React.useState(store.getState());
+  const [state, setState] = useState(store.getState());
 
-  React.useEffect(() => {
+  useEffect(() => {
     const unsubscribe = store.subscribe(() => {
       setState(store.getState());
     });
