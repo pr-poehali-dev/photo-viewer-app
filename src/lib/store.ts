@@ -1,5 +1,5 @@
 import { Album, Photo, ViewMode } from "@/types/types";
-import { create } from 'zustand';
+import { create } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
 
 interface PhotoStore {
