@@ -1,136 +1,107 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Album } from "@/types/types";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import usePhotoStore from "@/lib/store";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Album } from '@/types/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
+import usePhotoStore from '@/lib/store';
 
-const NewAlbumCard = () => {
-  const createAlbum = usePhotoStore((state) => state.createAlbum);
-  
+const AlbumGrid: React.FC = () => {
+  const { albums, createAlbum, deleteAlbum, updateAlbumTitle } = usePhotoStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+
+  const handleCreateAlbum = () => {
+    createAlbum();
+  };
+
+  const startEditing = (album: Album) => {
+    setEditingId(album.id);
+    setEditingTitle(album.title);
+  };
+
+  const saveTitle = (id: string) => {
+    updateAlbumTitle(id, editingTitle);
+    setEditingId(null);
+  };
+
   return (
-    <Card 
-      className="flex flex-col justify-center items-center h-full min-h-[200px] cursor-pointer hover:border-primary transition-colors duration-200"
-      onClick={() => createAlbum()}
-    >
-      <div className="flex flex-col items-center justify-center text-muted-foreground p-8">
-        <Plus size={36} className="mb-2" />
-        <p className="text-sm font-medium">Создать альбом</p>
+    <div className="container mx-auto p-4">
+      <div className="mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Мои альбомы</h2>
+        <Button onClick={handleCreateAlbum} className="flex items-center gap-2">
+          <Plus size={16} /> Создать альбом
+        </Button>
       </div>
-    </Card>
-  );
-};
 
-interface AlbumCardProps {
-  album: Album;
-}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        {albums.map((album) => (
+          <Card key={album.id} className="overflow-hidden group relative hover:shadow-md transition-shadow">
+            <Link to={`/album/${album.id}`}>
+              <div className="h-40 bg-gray-100 flex items-center justify-center">
+                {album.coverUrl ? (
+                  <img 
+                    src={album.coverUrl} 
+                    alt={album.title} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-gray-400 text-sm">Нет фото</div>
+                )}
+              </div>
+            </Link>
 
-const AlbumCard = ({ album }: AlbumCardProps) => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [title, setTitle] = React.useState(album.title);
-  const { deleteAlbum, updateAlbumTitle } = usePhotoStore();
-
-  const handleEditTitle = () => {
-    setIsEditing(true);
-  };
-
-  const handleSaveTitle = () => {
-    if (title.trim()) {
-      updateAlbumTitle(album.id, title);
-    } else {
-      setTitle(album.title);
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSaveTitle();
-    } else if (e.key === 'Escape') {
-      setTitle(album.title);
-      setIsEditing(false);
-    }
-  };
-
-  return (
-    <Card className="h-full flex flex-col">
-      <Link to={`/album/${album.id}`} className="flex-1">
-        <div className="relative pb-[100%] overflow-hidden rounded-t-md">
-          {album.coverUrl ? (
-            <img
-              src={album.coverUrl}
-              alt={album.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 w-full h-full bg-muted flex items-center justify-center">
-              <p className="text-muted-foreground">Нет фото</p>
-            </div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
-            <p className="text-white text-xs font-medium">
-              {album.photos.length} фото
-            </p>
-          </div>
-        </div>
-      </Link>
-      <CardFooter className="p-3 justify-between items-center">
-        {isEditing ? (
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleSaveTitle}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className="h-8"
-          />
-        ) : (
-          <p className="text-sm font-medium truncate flex-1">{album.title}</p>
-        )}
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal size={18} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEditTitle}>
-              Переименовать
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="text-destructive"
-              onClick={() => deleteAlbum(album.id)}
-            >
-              <Trash2 size={16} className="mr-2" />
-              Удалить
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </CardFooter>
-    </Card>
-  );
-};
-
-interface AlbumGridProps {
-  albums: Album[];
-}
-
-const AlbumGrid = ({ albums }: AlbumGridProps) => {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
-      <NewAlbumCard />
-      {albums.map((album) => (
-        <AlbumCard key={album.id} album={album} />
-      ))}
+            <CardContent className="p-3">
+              {editingId === album.id ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    className="flex-1 p-1 border rounded text-sm"
+                    autoFocus
+                    onBlur={() => saveTitle(album.id)}
+                    onKeyDown={(e) => e.key === 'Enter' && saveTitle(album.id)}
+                  />
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-medium truncate">{album.title}</h3>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        startEditing(album);
+                      }}
+                    >
+                      <Edit2 size={14} />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-red-500" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deleteAlbum(album.id);
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                {album.photos.length} фото
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,135 +1,140 @@
-import React, { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
-import usePhotoStore from "@/lib/store";
+import React, { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Upload, X } from 'lucide-react';
+import usePhotoStore from '@/lib/store';
 
 interface PhotoUploaderProps {
   albumId: string;
 }
 
-const PhotoUploader = ({ albumId }: PhotoUploaderProps) => {
-  const [isDragging, setIsDragging] = React.useState(false);
-  const [files, setFiles] = React.useState<File[]>([]);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+const PhotoUploader: React.FC<PhotoUploaderProps> = ({ albumId }) => {
   const { addPhotoToAlbum } = usePhotoStore();
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const processFiles = (files: FileList) => {
+    if (files.length === 0) return;
+
+    Array.from(files).forEach((file, index) => {
+      if (!file.type.startsWith('image/')) return;
+
+      // Simulate upload progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        setUploadProgress(progress);
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setUploadProgress(null);
+            
+            // Create an object URL for the image
+            const imageUrl = URL.createObjectURL(file);
+            
+            // Add the photo to the album
+            addPhotoToAlbum(albumId, {
+              url: imageUrl,
+              title: file.name
+            });
+          }, 500);
+        }
+      }, 50);
+    });
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     
     if (e.dataTransfer.files) {
-      const newFiles = Array.from(e.dataTransfer.files).filter(
-        file => file.type.startsWith('image/')
-      );
-      setFiles(prev => [...prev, ...newFiles]);
+      processFiles(e.dataTransfer.files);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).filter(
-        file => file.type.startsWith('image/')
-      );
-      setFiles(prev => [...prev, ...newFiles]);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setFiles(files.filter((_, i) => i !== index));
-  };
-
-  const uploadFiles = async () => {
-    for (const file of files) {
-      try {
-        // In a real app, you would upload to a server here
-        // For now, we'll use a local URL
-        const url = URL.createObjectURL(file);
-        const title = file.name.split('.')[0]; // Use filename as title
-        
-        addPhotoToAlbum(albumId, {
-          url,
-          title
-        });
-      } catch (error) {
-        console.error("Error uploading file:", error);
+      processFiles(e.target.files);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
     }
-    
-    setFiles([]);
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   return (
-    <div className="mt-4 p-4">
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center ${
-          isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/20'
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-2 text-sm font-medium">
-          Перетащите фото сюда или нажмите для выбора
-        </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Поддерживаются JPG, PNG, GIF
-        </p>
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          variant="secondary"
-          className="mt-4"
-        >
-          Выбрать файлы
-        </Button>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-        />
-      </div>
-
-      {files.length > 0 && (
-        <div className="mt-4">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium">Выбрано файлов: {files.length}</h4>
-            <Button onClick={uploadFiles} size="sm">
-              Загрузить все
+    <div 
+      className={`border-2 border-dashed rounded-lg p-6 mb-6 transition-colors ${
+        isDragging ? 'border-primary bg-primary/5' : 'border-gray-200'
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <input
+        type="file"
+        multiple
+        accept="image/*"
+        className="hidden"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+      />
+      
+      <div className="text-center">
+        {uploadProgress !== null ? (
+          <div className="space-y-2">
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="bg-primary h-2.5 rounded-full transition-all"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-gray-500">Загрузка... {uploadProgress}%</p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => setUploadProgress(null)}
+            >
+              <X size={16} className="mr-1" /> Отменить
             </Button>
           </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {files.map((file, index) => (
-              <div key={index} className="relative group">
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
-                  className="h-24 w-full object-cover rounded-md"
-                />
-                <button
-                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeFile(index)}
-                >
-                  <X size={14} />
-                </button>
-                <p className="text-xs truncate mt-1">{file.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        ) : (
+          <>
+            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium">Перетащите фотографии сюда</h3>
+            <p className="mt-1 text-xs text-gray-500">или</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={triggerFileInput}
+            >
+              Выбрать файлы
+            </Button>
+            <p className="mt-2 text-xs text-gray-500">
+              Поддерживаются JPG, PNG, GIF
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 };

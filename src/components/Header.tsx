@@ -1,54 +1,57 @@
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Grid, List, LayoutGrid } from "lucide-react";
-import usePhotoStore from "@/lib/store";
-import { ViewMode } from "@/types/types";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Home, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
-  showBack?: boolean;
-  title?: string;
-  showViewOptions?: boolean;
+  albumTitle?: string;
 }
 
-const Header = ({ showBack = false, title = "Фотогалерея", showViewOptions = false }: HeaderProps) => {
-  const { viewMode, setViewMode } = usePhotoStore();
-  
-  const viewOptions: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
-    { mode: 'grid', icon: <Grid size={18} />, label: 'Сетка' },
-    { mode: 'masonry', icon: <LayoutGrid size={18} />, label: 'Мозаика' },
-    { mode: 'list', icon: <List size={18} />, label: 'Список' },
-  ];
+const Header: React.FC<HeaderProps> = ({ albumTitle }) => {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   return (
-    <header className="sticky top-0 z-10 bg-background border-b py-3 px-4">
-      <div className="container mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {showBack && (
-            <Link to="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft size={20} />
-              </Button>
+    <header className="bg-white shadow-sm border-b">
+      <div className="container mx-auto py-3 px-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="text-lg font-bold text-primary">
+              ФотоГалерея
             </Link>
-          )}
-          <h1 className="text-xl font-semibold">{title}</h1>
-        </div>
-        
-        {showViewOptions && (
-          <div className="flex items-center gap-1">
-            {viewOptions.map(({ mode, icon, label }) => (
-              <Button
-                key={mode}
-                variant={viewMode === mode ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode(mode)}
-                className="flex items-center gap-2"
-              >
-                {icon}
-                <span className="hidden sm:inline">{label}</span>
-              </Button>
-            ))}
+            
+            {!isHomePage && (
+              <div className="flex items-center text-gray-500 text-sm">
+                <ChevronRight size={16} />
+                <div className="flex items-center">
+                  <Link to="/" className="hover:text-primary transition-colors flex items-center">
+                    <Home size={14} className="mr-1" />
+                    <span>Главная</span>
+                  </Link>
+                  
+                  {albumTitle && (
+                    <>
+                      <ChevronRight size={14} className="mx-1" />
+                      <span className="font-medium truncate max-w-[200px]">
+                        {albumTitle}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+          
+          <div className="flex gap-2">
+            {!isHomePage && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/">
+                  Вернуться к альбомам
+                </Link>
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );

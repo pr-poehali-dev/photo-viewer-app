@@ -1,8 +1,10 @@
+export type ViewMode = 'grid' | 'masonry' | 'list';
+
 export interface Photo {
   id: string;
+  albumId: string;
   url: string;
   title: string;
-  albumId: string;
   createdAt: string;
 }
 
@@ -13,5 +15,3 @@ export interface Album {
   photos: Photo[];
   createdAt: string;
 }
-
-export type ViewMode = 'grid' | 'masonry' | 'list';

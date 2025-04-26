@@ -1,187 +1,200 @@
-import React from "react";
-import { Photo, ViewMode } from "@/types/types";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { MoreHorizontal, Edit2, Trash2 } from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import usePhotoStore from "@/lib/store";
-
-interface PhotoItemProps {
-  photo: Photo;
-  viewMode: ViewMode;
-}
-
-const PhotoItem = ({ photo, viewMode }: PhotoItemProps) => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [title, setTitle] = React.useState(photo.title);
-  const { updatePhotoTitle, deletePhoto } = usePhotoStore();
-
-  const handleEditTitle = () => {
-    setIsEditing(true);
-  };
-
-  const handleSaveTitle = () => {
-    if (title.trim()) {
-      updatePhotoTitle(photo.albumId, photo.id, title);
-    } else {
-      setTitle(photo.title);
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSaveTitle();
-    } else if (e.key === 'Escape') {
-      setTitle(photo.title);
-      setIsEditing(false);
-    }
-  };
-
-  if (viewMode === 'list') {
-    return (
-      <div className="flex items-center gap-4 p-3 border-b hover:bg-muted/30 transition-colors">
-        <div className="w-16 h-16 shrink-0">
-          <img 
-            src={photo.url} 
-            alt={photo.title}
-            className="w-full h-full object-cover rounded-md"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleSaveTitle}
-              onKeyDown={handleKeyDown}
-              autoFocus
-              className="h-8"
-            />
-          ) : (
-            <p className="text-sm font-medium truncate">{photo.title}</p>
-          )}
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal size={18} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEditTitle}>
-              <Edit2 size={16} className="mr-2" />
-              Переименовать
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="text-destructive"
-              onClick={() => deletePhoto(photo.albumId, photo.id)}
-            >
-              <Trash2 size={16} className="mr-2" />
-              Удалить
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
-  }
-
-  return (
-    <Card className="overflow-hidden h-full flex flex-col">
-      <div className={`relative ${viewMode === 'grid' ? 'pb-[100%]' : ''} overflow-hidden`}>
-        <img
-          src={photo.url}
-          alt={photo.title}
-          className={`${viewMode === 'grid' ? 'absolute inset-0' : ''} w-full h-full object-cover`}
-        />
-      </div>
-      <CardFooter className="p-2 min-h-[40px] justify-between items-center">
-        {isEditing ? (
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleSaveTitle}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className="h-8"
-          />
-        ) : (
-          <p className="text-sm truncate flex-1">{photo.title}</p>
-        )}
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 ml-1">
-              <MoreHorizontal size={18} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEditTitle}>
-              <Edit2 size={16} className="mr-2" />
-              Переименовать
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="text-destructive"
-              onClick={() => deletePhoto(photo.albumId, photo.id)}
-            >
-              <Trash2 size={16} className="mr-2" />
-              Удалить
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </CardFooter>
-    </Card>
-  );
-};
+import React, { useState } from 'react';
+import { Photo } from '@/types/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Edit2, Trash2 } from 'lucide-react';
+import usePhotoStore from '@/lib/store';
 
 interface PhotoGridProps {
+  albumId: string;
   photos: Photo[];
-  viewMode: ViewMode;
+  viewMode: 'grid' | 'masonry' | 'list';
 }
 
-const PhotoGrid = ({ photos, viewMode }: PhotoGridProps) => {
+const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode }) => {
+  const { deletePhoto, updatePhotoTitle } = usePhotoStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+
+  const startEditing = (photo: Photo) => {
+    setEditingId(photo.id);
+    setEditingTitle(photo.title);
+  };
+
+  const saveTitle = (photoId: string) => {
+    updatePhotoTitle(albumId, photoId, editingTitle);
+    setEditingId(null);
+  };
+
+  // Форматируем дату
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
   if (photos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <p>Нет фотографий</p>
+      <div className="py-10 text-center text-gray-500">
+        <p>В этом альбоме пока нет фотографий</p>
+        <p className="text-sm mt-2">Загрузите фотографии, используя форму выше</p>
       </div>
     );
   }
 
   if (viewMode === 'list') {
     return (
-      <div className="p-4">
+      <div className="space-y-3">
         {photos.map((photo) => (
-          <PhotoItem key={photo.id} photo={photo} viewMode={viewMode} />
+          <Card key={photo.id} className="overflow-hidden group">
+            <div className="flex">
+              <div className="w-32 h-24 flex-shrink-0">
+                <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" />
+              </div>
+              <CardContent className="p-3 flex-1 flex flex-col justify-between">
+                {editingId === photo.id ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editingTitle}
+                      onChange={(e) => setEditingTitle(e.target.value)}
+                      className="flex-1 p-1 border rounded text-sm"
+                      autoFocus
+                      onBlur={() => saveTitle(photo.id)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveTitle(photo.id)}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-sm font-medium">{photo.title}</h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(photo.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => startEditing(photo)}
+                      >
+                        <Edit2 size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-500"
+                        onClick={() => deletePhoto(albumId, photo.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </div>
+          </Card>
         ))}
       </div>
     );
   }
 
+  // Masonry layout
   if (viewMode === 'masonry') {
-    // Simple masonry implementation with CSS columns
     return (
-      <div className="p-2 columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-2">
+      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-2 space-y-2">
         {photos.map((photo) => (
-          <div key={photo.id} className="mb-2 break-inside-avoid">
-            <PhotoItem photo={photo} viewMode={viewMode} />
+          <div key={photo.id} className="break-inside-avoid group relative">
+            <img src={photo.url} alt={photo.title} className="w-full rounded-md" />
+            <div className="p-2">
+              {editingId === photo.id ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    className="flex-1 p-1 border rounded text-sm"
+                    autoFocus
+                    onBlur={() => saveTitle(photo.id)}
+                    onKeyDown={(e) => e.key === 'Enter' && saveTitle(photo.id)}
+                  />
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-medium truncate">{photo.title}</h3>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => startEditing(photo)}
+                    >
+                      <Edit2 size={14} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-red-500"
+                      onClick={() => deletePhoto(albumId, photo.id)}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
     );
   }
 
-  // Default grid view
+  // Default grid layout
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 p-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
       {photos.map((photo) => (
-        <PhotoItem key={photo.id} photo={photo} viewMode={viewMode} />
+        <Card key={photo.id} className="overflow-hidden group">
+          <div className="h-32 sm:h-40">
+            <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" />
+          </div>
+          <CardContent className="p-2">
+            {editingId === photo.id ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  className="flex-1 p-1 border rounded text-sm"
+                  autoFocus
+                  onBlur={() => saveTitle(photo.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && saveTitle(photo.id)}
+                />
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium truncate">{photo.title}</h3>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => startEditing(photo)}
+                  >
+                    <Edit2 size={14} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-red-500"
+                    onClick={() => deletePhoto(albumId, photo.id)}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
