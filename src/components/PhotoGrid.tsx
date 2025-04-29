@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Photo } from '@/types/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import usePhotoStore from '@/lib/store';
 
 interface PhotoGridProps {
@@ -43,12 +43,24 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode }) => {
 
   if (viewMode === 'list') {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {photos.map((photo) => (
-          <Card key={photo.id} className="overflow-hidden group">
+          <Card key={photo.id} className="overflow-hidden group relative">
             <div className="flex">
-              <div className="w-32 h-24 flex-shrink-0">
+              <div className="w-32 h-24 flex-shrink-0 relative">
                 <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" />
+                
+                {/* Иконка удаления в верхнем правом углу */}
+                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded p-1 z-10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-white hover:text-white hover:bg-black/60"
+                    onClick={() => deletePhoto(albumId, photo.id)}
+                  >
+                    <Trash2 size={12} />
+                  </Button>
+                </div>
               </div>
               <CardContent className="p-3 flex-1 flex flex-col justify-between">
                 {editingId === photo.id ? (
@@ -64,31 +76,11 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode }) => {
                     />
                   </div>
                 ) : (
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-sm font-medium">{photo.title}</h3>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formatDate(photo.createdAt)}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => startEditing(photo)}
-                      >
-                        <Edit2 size={14} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-red-500"
-                        onClick={() => deletePhoto(albumId, photo.id)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
+                  <div>
+                    <h3 className="text-sm font-medium" onClick={() => startEditing(photo)}>{photo.title}</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatDate(photo.createdAt)}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -102,11 +94,26 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode }) => {
   // Masonry layout
   if (viewMode === 'masonry') {
     return (
-      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-2 space-y-2">
+      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-1 space-y-1">
         {photos.map((photo) => (
-          <div key={photo.id} className="break-inside-avoid group relative">
-            <img src={photo.url} alt={photo.title} className="w-full rounded-md" />
-            <div className="p-2">
+          <div key={photo.id} className="break-inside-avoid group relative mb-1">
+            <div className="relative">
+              <img src={photo.url} alt={photo.title} className="w-full rounded-md" />
+              
+              {/* Иконка удаления в верхнем правом углу */}
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded p-1 z-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-white hover:text-white hover:bg-black/60"
+                  onClick={() => deletePhoto(albumId, photo.id)}
+                >
+                  <Trash2 size={14} />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-2" onClick={() => startEditing(photo)}>
               {editingId === photo.id ? (
                 <div className="flex items-center gap-2">
                   <input
@@ -120,26 +127,8 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode }) => {
                   />
                 </div>
               ) : (
-                <div className="flex justify-between items-center">
+                <div>
                   <h3 className="text-sm font-medium truncate">{photo.title}</h3>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => startEditing(photo)}
-                    >
-                      <Edit2 size={14} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-red-500"
-                      onClick={() => deletePhoto(albumId, photo.id)}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
-                  </div>
                 </div>
               )}
             </div>
@@ -151,13 +140,26 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode }) => {
 
   // Default grid layout
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
       {photos.map((photo) => (
-        <Card key={photo.id} className="overflow-hidden group">
-          <div className="h-32 sm:h-40">
+        <Card key={photo.id} className="overflow-hidden group relative">
+          <div className="h-32 sm:h-40 relative">
             <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" />
+            
+            {/* Иконка удаления в верхнем правом углу */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded p-1 z-10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-white hover:text-white hover:bg-black/60"
+                onClick={() => deletePhoto(albumId, photo.id)}
+              >
+                <Trash2 size={14} />
+              </Button>
+            </div>
           </div>
-          <CardContent className="p-2">
+          
+          <CardContent className="p-2" onClick={() => startEditing(photo)}>
             {editingId === photo.id ? (
               <div className="flex items-center gap-2">
                 <input
@@ -171,26 +173,8 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode }) => {
                 />
               </div>
             ) : (
-              <div className="flex justify-between items-center">
+              <div>
                 <h3 className="text-sm font-medium truncate">{photo.title}</h3>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => startEditing(photo)}
-                  >
-                    <Edit2 size={14} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-red-500"
-                    onClick={() => deletePhoto(albumId, photo.id)}
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
               </div>
             )}
           </CardContent>

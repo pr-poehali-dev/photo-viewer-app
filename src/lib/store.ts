@@ -11,6 +11,8 @@ interface PhotoStore {
   addPhotoToAlbum: (albumId: string, photo: Omit<Photo, 'id' | 'albumId' | 'createdAt'>) => void;
   deletePhoto: (albumId: string, photoId: string) => void;
   updatePhotoTitle: (albumId: string, photoId: string, title: string) => void;
+  deleteAllAlbums: () => void;
+  deleteAllPhotos: (albumId: string) => void;
 }
 
 // Создаём простое хранилище на основе событий и localStorage
@@ -72,6 +74,8 @@ class SimpleStore implements PhotoStore {
       addPhotoToAlbum: this.addPhotoToAlbum,
       deletePhoto: this.deletePhoto,
       updatePhotoTitle: this.updatePhotoTitle,
+      deleteAllAlbums: this.deleteAllAlbums,
+      deleteAllPhotos: this.deleteAllPhotos,
     };
   }
 
@@ -95,6 +99,20 @@ class SimpleStore implements PhotoStore {
 
   deleteAlbum = (id: string) => {
     this.albums = this.albums.filter((album) => album.id !== id);
+    this.notify();
+  };
+
+  deleteAllAlbums = () => {
+    this.albums = [];
+    this.notify();
+  };
+
+  deleteAllPhotos = (albumId: string) => {
+    this.albums = this.albums.map((album) =>
+      album.id === albumId
+        ? { ...album, photos: [], coverUrl: undefined }
+        : album
+    );
     this.notify();
   };
 
