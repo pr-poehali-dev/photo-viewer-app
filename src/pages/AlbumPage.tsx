@@ -9,7 +9,7 @@ import usePhotoStore from '@/lib/store';
 
 const AlbumPage: React.FC = () => {
   const { albumId } = useParams<{ albumId: string }>();
-  const { albums, viewMode, setViewMode, deleteAllPhotos, addPhoto } = usePhotoStore();
+  const { albums, viewMode, setViewMode, deleteAllPhotos, addPhotoToAlbum } = usePhotoStore();
   const [photoSize, setPhotoSize] = useState<number>(40); // Default photo size in px
   const [gapSize, setGapSize] = useState<number>(2); // Default gap size
   
@@ -58,7 +58,7 @@ const AlbumPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header albumTitle={album.title} />
       <main className="flex-1 container mx-auto p-4 relative">
-        <div className="bg-white/90 backdrop-blur-sm pb-4 border-b mb-4">
+        <div className="bg-white pb-4 border-b mb-4">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">{album.title}</h1>
             <div className="flex items-center gap-2">
@@ -124,10 +124,12 @@ const AlbumPage: React.FC = () => {
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     if (event.target && typeof event.target.result === 'string') {
-                      addPhoto(
+                      addPhotoToAlbum(
                         album.id,
-                        file.name.split('.')[0] || 'Без названия',
-                        event.target.result
+                        {
+                          title: file.name.split('.')[0] || 'Без названия',
+                          url: event.target.result
+                        }
                       );
                     }
                   };
