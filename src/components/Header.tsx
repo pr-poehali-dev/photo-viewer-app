@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   albumTitle?: string;
@@ -39,16 +38,6 @@ const Header: React.FC<HeaderProps> = ({ albumTitle }) => {
                   )}
                 </div>
               </div>
-            )}
-          </div>
-          
-          <div className="flex gap-2">
-            {!isHomePage && (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/">
-                  Вернуться к альбомам
-                </Link>
-              </Button>
             )}
           </div>
         </div>

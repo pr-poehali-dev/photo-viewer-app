@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Album } from '@/types/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import usePhotoStore from '@/lib/store';
 
@@ -179,13 +179,6 @@ const AlbumGrid: React.FC = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* Фиксированная кнопка создания альбома */}
-      <div className="fixed bottom-6 right-6 z-30">
-        <Button onClick={handleCreateAlbum} className="rounded-full h-14 w-14 shadow-lg">
-          <Plus size={24} />
-        </Button>
       </div>
     </div>
   );

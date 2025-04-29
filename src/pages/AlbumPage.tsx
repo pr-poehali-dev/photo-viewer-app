@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import PhotoGrid from '@/components/PhotoGrid';
-import PhotoUploader from '@/components/PhotoUploader';
 import { Button } from '@/components/ui/button';
-import { Grid, Columns, List, Plus, Trash2, Upload } from 'lucide-react';
+import { Grid, Columns, List, Trash2, Upload } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import usePhotoStore from '@/lib/store';
 
@@ -110,7 +109,35 @@ const AlbumPage: React.FC = () => {
             </div>
           </div>
           
-          <PhotoUploader albumId={album.id} />
+          {/* Скрытый input для загрузки файлов */}
+          <input
+            type="file"
+            id="photo-upload-input"
+            multiple
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const files = e.target.files;
+              if (files && files.length > 0) {
+                const fileStore = usePhotoStore.getState();
+                for (let i = 0; i < files.length; i++) {
+                  const file = files[i];
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    if (event.target && typeof event.target.result === 'string') {
+                      fileStore.addPhoto(
+                        album.id,
+                        file.name.split('.')[0] || 'Без названия',
+                        event.target.result
+                      );
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+                e.target.value = '';
+              }
+            }}
+          />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-4">
             <div>
@@ -154,16 +181,6 @@ const AlbumPage: React.FC = () => {
             photoSize={photoSize}
             gapSize={gapSize}
           />
-        </div>
-
-        {/* Фиксированная кнопка для открытия загрузчика */}
-        <div className="fixed bottom-6 right-6 z-30">
-          <Button 
-            onClick={handleUploadButtonClick}
-            className="rounded-full h-14 w-14 shadow-lg"
-          >
-            <Plus size={24} />
-          </Button>
         </div>
       </main>
     </div>

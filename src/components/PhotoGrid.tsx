@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Photo } from '@/types/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
     return (
       <div className="py-10 text-center text-gray-500">
         <p>В этом альбоме пока нет фотографий</p>
-        <p className="text-sm mt-2">Загрузите фотографии, используя форму выше</p>
+        <p className="text-sm mt-2">Загрузите фотографии, используя кнопку "Добавить фото"</p>
       </div>
     );
   }
@@ -102,12 +102,6 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
 
   // Masonry layout
   if (viewMode === 'masonry') {
-    const columnCount = {
-      sm: 2,
-      md: 3,
-      lg: 4
-    };
-    
     return (
       <div 
         className="columns-1 sm:columns-2 md:columns-3 lg:columns-4"
@@ -124,6 +118,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
                 src={photo.url} 
                 alt={photo.title} 
                 className="absolute inset-0 w-full h-full object-cover rounded-md" 
+                style={{ maxHeight: `${photoSize * 3}px` }}
               />
               
               {/* Иконка удаления в верхнем правом углу */}
@@ -178,7 +173,10 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
         <Card key={photo.id} className="overflow-hidden group relative">
           <div 
             className="relative"
-            style={{ paddingBottom: '150%' }} // 2:3 ratio
+            style={{ 
+              paddingBottom: '150%', // 2:3 ratio
+              maxHeight: `${photoSize * 3}px`
+            }}
           >
             <img 
               src={photo.url} 
