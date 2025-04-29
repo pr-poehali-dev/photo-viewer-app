@@ -156,24 +156,24 @@ const AlbumGrid: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex items-center gap-1">
                     <h3 className="text-sm font-medium truncate">{album.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {album.photos.length} фото
-                    </p>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 hover:bg-gray-100" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        startEditing(album);
+                      }}
+                    >
+                      <Edit2 size={12} />
+                    </Button>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      startEditing(album);
-                    }}
-                  >
-                    <Edit2 size={14} />
-                  </Button>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {album.photos.length} фото
+                  </p>
                 </div>
               )}
             </CardContent>
