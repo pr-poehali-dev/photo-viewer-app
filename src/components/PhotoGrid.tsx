@@ -9,11 +9,11 @@ interface PhotoGridProps {
   albumId: string;
   photos: Photo[];
   viewMode: 'grid' | 'masonry' | 'list';
-  photoSize: number; // Photo size
+  photosPerRow: number; // Photos per row (3-8)
   gapSize: number; // Gap between photos
 }
 
-const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoSize, gapSize }) => {
+const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photosPerRow, gapSize }) => {
   const { deletePhoto, updatePhotoTitle } = usePhotoStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -51,7 +51,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
             <div className="flex">
               <div 
                 className="w-32 flex-shrink-0 relative"
-                style={{ height: `${photoSize}px` }}
+                style={{ height: '80px' }}
               >
                 <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" />
                 
@@ -102,10 +102,16 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
 
   // Masonry layout
   if (viewMode === 'masonry') {
+    // Calculate columns based on photosPerRow
+    const columnCount = Math.min(photosPerRow, 6); // Cap at 6 for masonry
+    
     return (
       <div 
-        className="columns-1 sm:columns-2 md:columns-3 lg:columns-4"
-        style={{ columnGap: `${gapSize}px` }}
+        className="columns-1 sm:columns-2"
+        style={{ 
+          columnCount: columnCount, 
+          columnGap: `${gapSize}px` 
+        }}
       >
         {photos.map((photo) => (
           <div 
@@ -113,13 +119,14 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
             className="break-inside-avoid group relative mb-1"
             style={{ marginBottom: `${gapSize}px` }}
           >
-            <div className="relative" style={{ paddingBottom: '150%' }}> {/* 2:3 ratio */}
-              <img 
-                src={photo.url} 
-                alt={photo.title} 
-                className="absolute inset-0 w-full h-full object-cover rounded-md" 
-                style={{ maxHeight: `${photoSize * 3}px` }}
-              />
+            <div className="relative">
+              <div style={{ paddingBottom: '150%' }}> {/* 2:3 ratio */}
+                <img 
+                  src={photo.url} 
+                  alt={photo.title} 
+                  className="absolute inset-0 w-full h-full object-cover rounded-md" 
+                />
+              </div>
               
               {/* Иконка удаления в верхнем правом углу */}
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded p-1 z-10">
@@ -163,41 +170,40 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ albumId, photos, viewMode, photoS
     );
   }
 
-  // Default grid layout
+  // Default grid layout with custom photos per row
   return (
     <div 
-      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-      style={{ gap: `${gapSize}px` }}
+      className="grid"
+      style={{ 
+        gridTemplateColumns: `repeat(${photosPerRow}, 1fr)`,
+        gap: `${gapSize}px` 
+      }}
     >
       {photos.map((photo) => (
         <Card key={photo.id} className="overflow-hidden group relative">
-          <div 
-            className="relative"
-            style={{ 
-              paddingBottom: '150%', // 2:3 ratio
-              maxHeight: `${photoSize * 3}px`
-            }}
-          >
-            <img 
-              src={photo.url} 
-              alt={photo.title} 
-              className="absolute inset-0 w-full h-full object-cover" 
-            />
-            
-            {/* Иконка удаления в верхнем правом углу */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded p-1 z-10">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-white hover:text-white hover:bg-black/60"
-                onClick={() => {
-                  if (window.confirm(`Удалить фото "${photo.title}"?`)) {
-                    deletePhoto(albumId, photo.id);
-                  }
-                }}
-              >
-                <Trash2 size={14} />
-              </Button>
+          <div style={{ width: '100%' }}>
+            <div className="relative" style={{ paddingBottom: '150%' }}> {/* 2:3 ratio */}
+              <img 
+                src={photo.url} 
+                alt={photo.title} 
+                className="absolute inset-0 w-full h-full object-cover" 
+              />
+              
+              {/* Иконка удаления в верхнем правом углу */}
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded p-1 z-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-white hover:text-white hover:bg-black/60"
+                  onClick={() => {
+                    if (window.confirm(`Удалить фото "${photo.title}"?`)) {
+                      deletePhoto(albumId, photo.id);
+                    }
+                  }}
+                >
+                  <Trash2 size={14} />
+                </Button>
+              </div>
             </div>
           </div>
           

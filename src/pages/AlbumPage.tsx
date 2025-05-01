@@ -10,25 +10,25 @@ import usePhotoStore from '@/lib/store';
 const AlbumPage: React.FC = () => {
   const { albumId } = useParams<{ albumId: string }>();
   const { albums, viewMode, setViewMode, deleteAllPhotos, addPhotoToAlbum } = usePhotoStore();
-  const [photoSize, setPhotoSize] = useState<number>(40); // Default photo size in px
+  const [photosPerRow, setPhotosPerRow] = useState<number>(4); // Default photos per row
   const [gapSize, setGapSize] = useState<number>(2); // Default gap size
   
   const album = albums.find(a => a.id === albumId);
 
   // Load preferences from localStorage
   useEffect(() => {
-    const savedPhotoSize = localStorage.getItem('photo-size');
+    const savedPhotosPerRow = localStorage.getItem('photos-per-row');
     const savedGapSize = localStorage.getItem('photo-gap-size');
     
-    if (savedPhotoSize) setPhotoSize(Number(savedPhotoSize));
+    if (savedPhotosPerRow) setPhotosPerRow(Number(savedPhotosPerRow));
     if (savedGapSize) setGapSize(Number(savedGapSize));
   }, []);
 
   // Save preferences to localStorage
   useEffect(() => {
-    localStorage.setItem('photo-size', photoSize.toString());
+    localStorage.setItem('photos-per-row', photosPerRow.toString());
     localStorage.setItem('photo-gap-size', gapSize.toString());
-  }, [photoSize, gapSize]);
+  }, [photosPerRow, gapSize]);
   
   if (!album) {
     return (
@@ -143,15 +143,15 @@ const AlbumPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-4">
             <div>
               <label className="text-sm font-medium flex justify-between mb-2">
-                <span>Размер фотографий</span>
-                <span className="text-muted-foreground">{photoSize}px</span>
+                <span>Количество фото в строке</span>
+                <span className="text-muted-foreground">{photosPerRow}</span>
               </label>
               <Slider 
-                value={[photoSize]} 
-                min={40} 
-                max={200} 
-                step={5} 
-                onValueChange={(value) => setPhotoSize(value[0])}
+                value={[photosPerRow]} 
+                min={3} 
+                max={8} 
+                step={1} 
+                onValueChange={(value) => setPhotosPerRow(value[0])}
               />
             </div>
             <div>
@@ -179,7 +179,7 @@ const AlbumPage: React.FC = () => {
             albumId={album.id} 
             photos={album.photos} 
             viewMode={viewMode}
-            photoSize={photoSize}
+            photosPerRow={photosPerRow}
             gapSize={gapSize}
           />
         </div>
